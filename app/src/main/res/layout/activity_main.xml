@@ -29,6 +29,7 @@
             android:layout_height="82dp"
             android:background="@drawable/button_effect"
             android:contentDescription="Feed doge with Ham."
+            android:onClick="onMenuClicked"
             android:scaleType="centerInside"
             android:src="@drawable/ham_2x"
             tools:src="@drawable/ham_2x" />
@@ -39,6 +40,7 @@
             android:layout_height="82dp"
             android:background="@drawable/button_effect"
             android:contentDescription="Feed doge with Steak."
+            android:onClick="onMenuClicked"
             android:scaleType="centerInside"
             android:src="@drawable/steak_2x"
             tools:src="@drawable/steak_2x" />
@@ -49,6 +51,7 @@
             android:layout_height="match_parent"
             android:background="@drawable/button_effect"
             android:contentDescription="Feed doge with Turkey Leg."
+            android:onClick="onMenuClicked"
             android:src="@drawable/turkey_leg_2x"
             tools:src="@drawable/turkey_leg_2x" />
 

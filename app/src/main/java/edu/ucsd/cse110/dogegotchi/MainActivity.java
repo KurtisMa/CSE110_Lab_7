@@ -18,6 +18,7 @@ import java.util.Map;
 import edu.ucsd.cse110.dogegotchi.daynightcycle.DayNightCycleMediator;
 import edu.ucsd.cse110.dogegotchi.doge.Doge;
 import edu.ucsd.cse110.dogegotchi.doge.DogeView;
+import edu.ucsd.cse110.dogegotchi.doge.MenuView;
 import edu.ucsd.cse110.dogegotchi.sprite.Coord;
 import edu.ucsd.cse110.dogegotchi.ticker.AsyncTaskTicker;
 import edu.ucsd.cse110.dogegotchi.ticker.ITicker;
@@ -35,6 +36,7 @@ public class MainActivity extends Activity {
     private Doge doge;
 
     private DogeView dogeView;
+    private MenuView menuView; //exe 2
 
     private MediaPlayer dayPlayer;
 
@@ -65,14 +67,16 @@ public class MainActivity extends Activity {
         ticker.register(this.dayNightCycleMediator);
 
         /**
-         * TODO: Exercise 1 -- Observer
+         * TODO: Exercise 1 -- Observer(i think done)
          *
          * - You'll have to make doge's state change from Happy/Sad at night to Sleeping.
          * - In the morning, doge should go to happy state. See write-up.
          */
         // create the almighty doge
         createDoge(ticksPerPeriod);
+
         ticker.register(this.doge);
+        this.dayNightCycleMediator.register(this.doge); //register observer to day/night
 
         final GameView gameView = this.findViewById(R.id.GameCanvasView);
         gameView.setMedia(dayPlayer, nightPlayer);
@@ -99,6 +103,7 @@ public class MainActivity extends Activity {
                           steakButton     = foodMenu.findViewById(R.id.SteakButton),
                           turkeyLegButton = foodMenu.findViewById(R.id.TurkeyLegButton);
         // hm... should prob do something with this
+
 
         /**
          * TODO: Exercise 3 -- Strategy & Factory
@@ -169,16 +174,33 @@ public class MainActivity extends Activity {
                         new Coord(getResources().getInteger(R.integer.happy_x),
                                   getResources().getInteger(R.integer.happy_y)));
 
-        // TODO: Exercise 1 - set up sprite and coords for SAD state.
+        // TODO: Exercise 1 - set up sprite and coords for SAD state (done?).
+        stateBitmaps.put(Doge.State.SAD,
+                BitmapFactory.decodeResource(getResources(), R.drawable.sad_2x));
+        stateCoords.put(Doge.State.SAD,
+                new Coord(getResources().getInteger(R.integer.sad_x),
+                        getResources().getInteger(R.integer.sad_y)));
+
         stateBitmaps.put(Doge.State.SLEEPING,
                          BitmapFactory.decodeResource(getResources(), R.drawable.sleeping_2x));
         stateCoords.put(Doge.State.SLEEPING,
                         new Coord(getResources().getInteger(R.integer.sleeping_x),
                                   getResources().getInteger(R.integer.sleeping_y)));
 
-        // TODO: Exercise 2 - Set up sprite and coords for EATING state.
+        // TODO: Exercise 2 - Set up sprite and coords for EATING state.(done)
+        stateBitmaps.put(Doge.State.EATING,
+                BitmapFactory.decodeResource(getResources(), R.drawable.eating_2x));
+        stateCoords.put(Doge.State.EATING,
+                new Coord(getResources().getInteger(R.integer.eating_x),
+                        getResources().getInteger(R.integer.eating_y)));
+
+        //MENU VIEW HERE
+        this.menuView = new MenuView(findViewById(R.id.FoodMenuView));
+        this.doge.register(this.menuView);
+
         // TODO: Exercise 3 - You may need to create the Factory of Strategies here
         this.dogeView = new DogeView(this, Doge.State.HAPPY, stateBitmaps, stateCoords);
+
 
         // make the doge view observe doge's mood swings
         this.doge.register(this.dogeView);
@@ -195,5 +217,9 @@ public class MainActivity extends Activity {
         }
         this.ticker.stop();
         super.onDestroy();
+    }
+
+    public void onMenuClicked(View view) {
+        this.doge.feed();
     }
 }

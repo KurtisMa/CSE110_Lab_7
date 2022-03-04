@@ -1,32 +1,43 @@
 package edu.ucsd.cse110.dogegotchi.doge;
 
+import static edu.ucsd.cse110.dogegotchi.daynightcycle.IDayNightCycleObserver.Period.DAY;
+import static edu.ucsd.cse110.dogegotchi.daynightcycle.IDayNightCycleObserver.Period.NIGHT;
+
+import android.os.Handler;
 import android.util.Log;
 
 import com.google.common.base.Preconditions;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
+
+import edu.ucsd.cse110.dogegotchi.daynightcycle.IDayNightCycleObserver;
 import edu.ucsd.cse110.dogegotchi.observer.ISubject;
 import edu.ucsd.cse110.dogegotchi.ticker.ITickerObserver;
 
 /**
  * Logic for our friendly, sophisticated doge.
  *
- * TODO: Exercise 1 -- add support for {@link State#SLEEPING}.
+ * TODO: Exercise 1 -- add support for {@link State#SLEEPING}. (maybe done?)
  *
- * TODO: Exercise 2 -- enable {@link State#SAD} mood, and add support for {@link State#EATING} behavior.
+ * TODO: Exercise 2 -- enable {@link State#SAD} mood, and add support for {@link State#EATING} behavior. (yeah?)
  */
-public class Doge implements ISubject<IDogeObserver>, ITickerObserver {
+public class Doge implements ISubject<IDogeObserver>, ITickerObserver, IDayNightCycleObserver {
     /**
      * Current number of ticks. Reset after every potential mood swing.
      */
     int numTicks;
+    int eatTicks;
 
     /**
      * How many ticks before we toss a multi-sided die to check mood swing.
      */
     final int numTicksBeforeMoodSwing;
+    final int numTicksDoneEating = 5;
 
     /**
      * Probability of a mood swing every {@link #numTicksBeforeMoodSwing}.
@@ -37,6 +48,9 @@ public class Doge implements ISubject<IDogeObserver>, ITickerObserver {
      * State of doge.
      */
     State state;
+    private ExecutorService backgroundThreadExecutor = Executors.newSingleThreadExecutor();
+    private Future<?> future;
+
 
     private Collection<IDogeObserver> observers;
 
@@ -65,22 +79,61 @@ public class Doge implements ISubject<IDogeObserver>, ITickerObserver {
     @Override
     public void onTick() {
         this.numTicks++;
-
         if (this.numTicks > 0
             && (this.numTicks % this.numTicksBeforeMoodSwing) == 0) {
             tryRandomMoodSwing();
             this.numTicks = 0;
         }
+
+        //part 2 eating
+        if (this.state == State.EATING) {
+            this.eatTicks++;
+            if (this.eatTicks == this.numTicksDoneEating) {
+                setState(State.HAPPY);
+            }
+        }
     }
 
     /**
-     * TODO: Exercise 1 -- Fill in this method to randomly make doge sad with probability {@link #moodSwingProbability}.
+     * TODO: Exercise 1 -- Fill in this method to randomly make doge sad with probability {@link #moodSwingProbability}. (done?)
      *
      * **Strictly follow** the Finite State Machine in the write-up.
      */
     private void tryRandomMoodSwing() {
-        // TODO: Exercise 1 -- Implement this method...
+        // TODO: Exercise 1 -- Implement this method... (done?)
+        if (this.state == State.HAPPY){
+            if (moodSwingProbability > Math.random()) {
+                setState(State.SAD);
+            }
+        }
     }
+    //IMPLEMENTED THIS BECAUSE WE NEEDED TO IMPLEMENT IDAYNIGHTCYCLEOBSERVER
+    @Override
+    public void onPeriodChange(Period newPeriod){
+        if (newPeriod == DAY) {
+            this.setState(State.HAPPY);
+        }
+        else if (newPeriod == NIGHT && (this.state != State.EATING)){
+            this.setState(State.SLEEPING);
+        }
+        else { // else it is night and doge IS eating
+            this.future = backgroundThreadExecutor.submit(() ->{
+                try {
+                    Thread.sleep((numTicksDoneEating-eatTicks)*1000);
+                    this.setState(State.SLEEPING);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            });
+        }
+    }
+
+    //got to have this method because setState is private
+    public void feed(){
+        setState(State.EATING);
+        eatTicks = 0;
+    }
+
 
     @Override
     public void register(IDogeObserver observer) {
